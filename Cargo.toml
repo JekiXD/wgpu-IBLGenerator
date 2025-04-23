@@ -1,0 +1,25 @@
+[package]
+name = "IBLConverter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+winit = {version = "0.29.15", features=["rwh_06"]}
+wgpu = { version = "25.0.0" }
+bytemuck = { version = "1.12", features = [ "derive" ] }
+
+
+pollster = "0.3.0"
+once_cell = "1.19.0"
+anyhow = "1.0.81"
+
+bincode = "1.3.3"
+glam = "0.30.2"
+image =  { version = "0.25.6", features = [ "hdr" ] } 
+
+env_logger = { version = "0.10", default-features = false, features = [
+    "auto-color",
+    "humantime",
+] }
+log = "0.4.21"
