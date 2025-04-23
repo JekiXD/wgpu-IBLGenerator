@@ -23,25 +23,21 @@ impl Texture2D
     (
       &wgpu::TextureDescriptor
       {
-        label : Option::Some( "HDR_TEXTURE" ),
+        label : Option::Some( "2D_TEXTURE" ),
         size,
         mip_level_count : 1,
         sample_count : 1,
         dimension : wgpu::TextureDimension::D2,
         format,
-        usage : wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        usage : wgpu::TextureUsages::TEXTURE_BINDING 
+        | wgpu::TextureUsages::COPY_DST 
+        | wgpu::TextureUsages::RENDER_ATTACHMENT
+        | wgpu::TextureUsages::COPY_SRC,
         view_formats : &[]
       }
     );
 
-    let view = texture.create_view
-    ( 
-      &wgpu::TextureViewDescriptor
-      {
-        format : Some( format ),
-        ..Default::default()
-      }
-    );
+    let view = texture.create_view( &wgpu::TextureViewDescriptor::default() );
 
     Self 
     {
@@ -60,6 +56,11 @@ impl Texture2D
   pub fn view( &self ) -> &wgpu::TextureView
   {
     &self.view
+  }
+
+  pub fn texture( &self ) -> &wgpu::Texture
+  {
+    &self.texture
   }
 
   pub fn write_pixels( &self, queue : &wgpu::Queue, pixels : &[ f32 ] )

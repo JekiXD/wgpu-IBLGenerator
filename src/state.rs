@@ -3,7 +3,7 @@ use std::{rc::Rc, sync::Arc};
 use image::{GenericImageView, ImageReader};
 use winit::{event::WindowEvent, window::Window};
 
-use crate::{camera::Uniform, cube_map_renderer::CubeMapRenderer, cube_mipmap_renderer::CubeMipmapRenderer, cube_texture::CubeTexture, texture_2d::Texture2D};
+use crate::{camera::Uniform, cube_map_renderer::CubeMapRenderer, cube_mipmap_renderer::CubeMipmapRenderer, cube_texture::CubeTexture, ibl_renderer::IBLRenderer, texture_2d::Texture2D};
 
 pub struct State {
   pub device: wgpu::Device,
@@ -18,7 +18,8 @@ pub struct State {
   pub bind_group : wgpu::BindGroup,
   pub bind_group_layout : wgpu::BindGroupLayout,
   surface_format : wgpu::TextureFormat,
-  cube_mipmap_renderer : CubeMipmapRenderer
+  cube_mipmap_renderer : CubeMipmapRenderer,
+  ibl_renderer : IBLRenderer
 }
 
 impl State {
@@ -91,6 +92,15 @@ impl State {
 
     let cm_renderer = CubeMapRenderer::new( cube_texture.clone(), hdr_texture.clone(), &device );
     let cube_mipmap_renderer = CubeMipmapRenderer::new( &device, cube_texture.clone() );
+    let ibl_renderer = IBLRenderer::new
+    ( 
+      &device, cube_texture.clone(), 
+      wgpu::TextureFormat::Rgba32Float, 
+      img_width, 
+      img_height, 
+      512, 
+      512
+    );
 
     let bind_group_layout = device.create_bind_group_layout
     (
@@ -224,7 +234,8 @@ impl State {
       bind_group,
       bind_group_layout,
       surface_format,
-      cube_mipmap_renderer
+      cube_mipmap_renderer,
+      ibl_renderer
     }
   }
 
@@ -244,8 +255,14 @@ impl State {
 
     self.cm_renderer.render( &mut encoder );
     self.cube_mipmap_renderer.generate_mipmaps( &self.device, &mut encoder );
+    self.ibl_renderer.render( &mut encoder );
 
     self.queue.submit( std::iter::once( encoder.finish() ) );
+  }
+
+  pub async fn save_ibl( &self )
+  {
+    self.ibl_renderer.save( &self.device ).await;
   }
 
   pub fn render( &mut self ) -> Result< (), wgpu::SurfaceError > 

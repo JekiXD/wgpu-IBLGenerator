@@ -22,6 +22,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut state = state::State::new(window.clone()).await;
 
     state.render_hdr_to_cube();
+    state.save_ibl().await;
 
     event_loop.run(move |event, elwt| match event {
         Event::WindowEvent {
