@@ -80,14 +80,15 @@ impl State {
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/autumn_field_puresky_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/passendorf_snow_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/metro_noord_4k.hdr" ).unwrap().decode().unwrap();
-    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
+    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/the_sky_is_on_fire_4k.hdr" ).unwrap().decode().unwrap();
     let image = image.to_rgba32f();
     let ( img_width, img_height ) = image.dimensions();
     let pixels = image.into_vec();
 
-    let hdr_texture = Rc::new( Texture2D::new( &device, wgpu::TextureFormat::Rgba32Float, img_width, img_height ) );
+    let hdr_texture = Rc::new( Texture2D::new( &device, wgpu::TextureFormat::Rgba32Float, img_width, img_height, false ) );
     hdr_texture.write_pixels( &queue, &pixels );
-    let cube_texture = Rc::new( CubeTexture::new( &device, 512, 512 ) );
+    let cube_texture = Rc::new( CubeTexture::new( &device, 1024, 1024 ) );
     let uniform = Uniform::new( &device, window_size.width as f32, window_size.height as f32 );
 
     let cm_renderer = CubeMapRenderer::new( cube_texture.clone(), hdr_texture.clone(), &device );
@@ -96,8 +97,10 @@ impl State {
     ( 
       &device, cube_texture.clone(), 
       wgpu::TextureFormat::Rgba32Float, 
-      img_width, 
-      img_height, 
+      512, 
+      512, 
+      512,
+      512,
       512, 
       512
     );
@@ -255,15 +258,28 @@ impl State {
 
     self.cm_renderer.render( &mut encoder );
     self.cube_mipmap_renderer.generate_mipmaps( &self.device, &mut encoder );
-    self.ibl_renderer.render( &mut encoder );
+    self.ibl_renderer.render_diffuse( &mut encoder );
+    self.ibl_renderer.render_specular_1( &mut encoder, &self.queue );
+    self.ibl_renderer.render_specular_2( &mut encoder );
 
     self.queue.submit( std::iter::once( encoder.finish() ) );
   }
 
-  pub async fn save_ibl( &self )
+  pub async fn save_ibl_diffuse( &self )
   {
-    self.ibl_renderer.save( &self.device ).await;
+    self.ibl_renderer.save_diffuse( &self.device ).await;
   }
+
+  pub async fn save_ibl_specular_1( &self )
+  {
+    self.ibl_renderer.save_specular_1( &self.device ).await;
+  }
+
+  pub async fn save_ibl_specular_2( &self )
+  {
+    self.ibl_renderer.save_specular_2( &self.device ).await;
+  }
+
 
   pub fn render( &mut self ) -> Result< (), wgpu::SurfaceError > 
   {

@@ -22,47 +22,49 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut state = state::State::new(window.clone()).await;
 
     state.render_hdr_to_cube();
-    state.save_ibl().await;
+    state.save_ibl_diffuse().await;
+    state.save_ibl_specular_1().await;
+    state.save_ibl_specular_2().await;
 
-    event_loop.run(move |event, elwt| match event {
-        Event::WindowEvent {
-            ref event,
-            window_id,
-        } if window_id == window.id() => if !state.input(event) { 
-            match event {
-                WindowEvent::CloseRequested
-                | WindowEvent::KeyboardInput {
-                    event:
-                        KeyEvent {
-                            state: ElementState::Pressed,
-                            physical_key: PhysicalKey::Code(KeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => elwt.exit(),
-                //WindowEvent::Resized(new_size) => {state.resize(*new_size);},
-                WindowEvent::ScaleFactorChanged { scale_factor, inner_size_writer } => { 
-                    debug!("ScaleFactorChanged: {:?}, {:?}", scale_factor, inner_size_writer);
-                    //TODO
+    // event_loop.run(move |event, elwt| match event {
+    //     Event::WindowEvent {
+    //         ref event,
+    //         window_id,
+    //     } if window_id == window.id() => if !state.input(event) { 
+    //         match event {
+    //             WindowEvent::CloseRequested
+    //             | WindowEvent::KeyboardInput {
+    //                 event:
+    //                     KeyEvent {
+    //                         state: ElementState::Pressed,
+    //                         physical_key: PhysicalKey::Code(KeyCode::Escape),
+    //                         ..
+    //                     },
+    //                 ..
+    //             } => elwt.exit(),
+    //             //WindowEvent::Resized(new_size) => {state.resize(*new_size);},
+    //             WindowEvent::ScaleFactorChanged { scale_factor, inner_size_writer } => { 
+    //                 debug!("ScaleFactorChanged: {:?}, {:?}", scale_factor, inner_size_writer);
+    //                 //TODO
 
-                },
-                WindowEvent::RedrawRequested => {
-                    state.update();
-                    match state.render() {
-                        Ok(_) => {}
-                        //Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                        Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
-                        Err(e) => eprintln!("Error: {:?}", e),
-                    }
-                },
-                _ => {}
-            }
-        },
-        Event::AboutToWait => {
-            window.request_redraw();
-        }
-        _ => {}
-    })?;
+    //             },
+    //             WindowEvent::RedrawRequested => {
+    //                 state.update();
+    //                 match state.render() {
+    //                     Ok(_) => {}
+    //                     //Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+    //                     Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
+    //                     Err(e) => eprintln!("Error: {:?}", e),
+    //                 }
+    //             },
+    //             _ => {}
+    //         }
+    //     },
+    //     Event::AboutToWait => {
+    //         window.request_redraw();
+    //     }
+    //     _ => {}
+    // })?;
 
     Ok(())
 }

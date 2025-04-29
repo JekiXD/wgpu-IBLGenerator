@@ -92,10 +92,8 @@ fn main( @builtin( global_invocation_id ) gid: vec3< u32 > )
   let latitude = atan2( dir.z, dir.x );
 
   var hdr_uv = vec2f( latitude, longitude ) * tangent_normalizer + vec2f( 0.5 );
-  //let hdr_uv2 = vec2u( hdr_uv * vec2f( textureDimensions( src ) ) );
   
   let hdr_sample = sampleHDR( src, hdr_uv );
-  //textureStore( dst, gid.xy, gid.z, vec4f( vec3f( hdr_uv.x ), 1.0,) );
   textureStore(  dst, gid.xy, gid.z, hdr_sample );
 }
 
