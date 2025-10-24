@@ -3,7 +3,7 @@ use std::{rc::Rc, sync::Arc};
 use image::{GenericImageView, ImageReader};
 use winit::{event::WindowEvent, window::Window};
 
-use crate::{camera::Uniform, cube_map_renderer::CubeMapRenderer, cube_mipmap_renderer::CubeMipmapRenderer, cube_texture::CubeTexture, ibl_renderer::IBLRenderer, texture_2d::Texture2D};
+use crate::{camera::Uniform, cube_map_renderer::CubeMapRenderer, cube_mipmap_renderer::CubeMipmapRenderer, cube_texture::CubeTexture, ibl_renderer::IBLRenderer, ibl_renderer_cube::IBLRendererCube, texture_2d::Texture2D};
 
 pub struct State {
   pub device: wgpu::Device,
@@ -19,7 +19,8 @@ pub struct State {
   pub bind_group_layout : wgpu::BindGroupLayout,
   surface_format : wgpu::TextureFormat,
   cube_mipmap_renderer : CubeMipmapRenderer,
-  ibl_renderer : IBLRenderer
+  //ibl_renderer : IBLRenderer,
+  ibl_renderer_cube : IBLRendererCube
 }
 
 impl State {
@@ -80,22 +81,35 @@ impl State {
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/autumn_field_puresky_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/passendorf_snow_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/metro_noord_4k.hdr" ).unwrap().decode().unwrap();
-    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
-    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/the_sky_is_on_fire_4k.hdr" ).unwrap().decode().unwrap();
+    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/the_sky_is_on_fire_4k.hdr" ).unwrap().decode().unwrap();
     let image = image.to_rgba32f();
     let ( img_width, img_height ) = image.dimensions();
     let pixels = image.into_vec();
 
     let hdr_texture = Rc::new( Texture2D::new( &device, wgpu::TextureFormat::Rgba32Float, img_width, img_height, false ) );
     hdr_texture.write_pixels( &queue, &pixels );
-    let cube_texture = Rc::new( CubeTexture::new( &device, 1024, 1024 ) );
+    let cube_texture = Rc::new( CubeTexture::new( &device, wgpu::TextureFormat::Rgba32Float, 1024, 1024, true ) );
     let uniform = Uniform::new( &device, window_size.width as f32, window_size.height as f32 );
 
     let cm_renderer = CubeMapRenderer::new( cube_texture.clone(), hdr_texture.clone(), &device );
     let cube_mipmap_renderer = CubeMipmapRenderer::new( &device, cube_texture.clone() );
-    let ibl_renderer = IBLRenderer::new
+    // let ibl_renderer = IBLRenderer::new
+    // ( 
+    //   &device, cube_texture.clone(), 
+    //   wgpu::TextureFormat::Rgba32Float, 
+    //   512, 
+    //   512, 
+    //   512,
+    //   512,
+    //   512, 
+    //   512
+    // );
+
+    let ibl_renderer_cube = IBLRendererCube::new
     ( 
-      &device, cube_texture.clone(), 
+      &device, 
+      cube_texture.clone(), 
       wgpu::TextureFormat::Rgba32Float, 
       512, 
       512, 
@@ -238,7 +252,8 @@ impl State {
       bind_group_layout,
       surface_format,
       cube_mipmap_renderer,
-      ibl_renderer
+      //ibl_renderer,
+      ibl_renderer_cube
     }
   }
 
@@ -258,26 +273,38 @@ impl State {
 
     self.cm_renderer.render( &mut encoder );
     self.cube_mipmap_renderer.generate_mipmaps( &self.device, &mut encoder );
-    self.ibl_renderer.render_diffuse( &mut encoder );
-    self.ibl_renderer.render_specular_1( &mut encoder, &self.queue );
-    self.ibl_renderer.render_specular_2( &mut encoder );
+
+    // self.ibl_renderer.render_diffuse( &mut encoder );
+    // self.ibl_renderer.render_specular_1( &mut encoder, &self.queue );
+    // self.ibl_renderer.render_specular_2( &mut encoder );
 
     self.queue.submit( std::iter::once( encoder.finish() ) );
+
+    let mut encoder = self.device.create_command_encoder( &wgpu::CommandEncoderDescriptor::default() );
+    self.ibl_renderer_cube.render_diffuse( &mut encoder, &self.device, &self.queue  );
+    self.ibl_renderer_cube.render_specular_1( &mut encoder, &self.device, &self.queue );
+    self.ibl_renderer_cube.render_specular_2( &mut encoder );
+
+    self.queue.submit( std::iter::once( encoder.finish() ) );
+
   }
 
   pub async fn save_ibl_diffuse( &self )
   {
-    self.ibl_renderer.save_diffuse( &self.device ).await;
+    //self.ibl_renderer.save_diffuse( &self.device ).await;
+    self.ibl_renderer_cube.save_diffuse( &self.device ).await;
   }
 
   pub async fn save_ibl_specular_1( &self )
   {
-    self.ibl_renderer.save_specular_1( &self.device ).await;
+    //self.ibl_renderer.save_specular_1( &self.device ).await;
+    self.ibl_renderer_cube.save_specular_1( &self.device ).await;
   }
 
   pub async fn save_ibl_specular_2( &self )
   {
-    self.ibl_renderer.save_specular_2( &self.device ).await;
+    //self.ibl_renderer.save_specular_2( &self.device ).await;
+    self.ibl_renderer_cube.save_specular_2( &self.device ).await;
   }
 
 

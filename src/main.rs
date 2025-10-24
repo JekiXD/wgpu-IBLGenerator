@@ -8,6 +8,7 @@ mod cube_texture;
 mod cube_map_renderer;
 mod camera;
 mod ibl_renderer;
+mod ibl_renderer_cube;
 mod texture_2d;
 mod cube_mipmap_renderer;
 

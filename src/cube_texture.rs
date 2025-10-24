@@ -12,21 +12,25 @@ pub struct CubeTexture
 
 impl CubeTexture 
 {
-  pub fn new( device : &wgpu::Device, width : u32, height : u32 ) -> Self
+  pub fn new( device : &wgpu::Device, format : wgpu::TextureFormat, width : u32, height : u32, with_mips : bool ) -> Self
   {
     let size = wgpu::Extent3d { width, height, depth_or_array_layers: 6 };
-    let format = wgpu::TextureFormat::Rgba32Float;
+    let mip_level_count = if with_mips { size.max_mips( wgpu::TextureDimension::D2 ) } else { 1 };
+
     let texture = device.create_texture
     (
       &wgpu::TextureDescriptor
       {
         label : Option::Some( "CUBE_TEXTURE" ), 
         size,
-        mip_level_count : size.max_mips( wgpu::TextureDimension::D2 ),
+        mip_level_count,
         sample_count : 1,
         dimension : wgpu::TextureDimension::D2,
         format,
-        usage : wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
+        usage : wgpu::TextureUsages::TEXTURE_BINDING 
+        | wgpu::TextureUsages::STORAGE_BINDING 
+        | wgpu::TextureUsages::RENDER_ATTACHMENT
+        | wgpu::TextureUsages::COPY_SRC,
         view_formats : &[]
       }
     );
@@ -92,6 +96,23 @@ impl CubeTexture
         ..Default::default()
       }
     )
+  }
+
+  pub fn mip_level_size( &self, mip_level : u32 ) -> wgpu::Extent3d
+  {
+    self.size.mip_level_size( mip_level, wgpu::TextureDimension::D2 )
+  }
+
+  pub fn mip_memory_size( &self, mip_level : u32 ) -> u32
+  {
+    let size = self.mip_level_size( mip_level );
+    self.format.block_copy_size( None ).unwrap() * size.width * size.height * size.depth_or_array_layers
+  }
+
+  pub fn mip_memory_size_row( &self, mip_level : u32 ) -> u32
+  {
+    let size = self.mip_level_size( mip_level );
+    self.format.block_copy_size( None ).unwrap() * size.width
   }
 
   pub fn format( &self ) -> wgpu::TextureFormat { self.format }
