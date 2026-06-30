@@ -64,8 +64,8 @@ fn fragment_diffuse_main( in : VertexOutput ) -> @location( 0 ) vec4f
 
   let TBN = mat3x3< f32 >( up, normal, right );
 
-  let NUM_SAMPLES_X : f32 = 50.0;
-  let NUM_SAMPLES_Y : f32 = 50.0;
+  let NUM_SAMPLES_X : f32 = 250.0;
+  let NUM_SAMPLES_Y : f32 = 150.0;
   let DELTA_X : f32 = 1.0 / NUM_SAMPLES_X;
   let DELTA_Y : f32 = 1.0 / NUM_SAMPLES_Y;
 
@@ -113,7 +113,7 @@ fn fragment_specular_1_main( in : VertexOutput ) -> @location( 0 ) vec4f
     let dotNL = saturate( dot( N, L ) );
     let dotNH = saturate( dot( N, H ) );
 
-    //if( dotNL > 0.0 )
+    if( dotNL > 0.0 )
     {
       let D = D_GGX( alpha, dotNH );
       let pdf = D * dotNH / ( 4.0 * dotVH ) + 0.0001;
@@ -160,11 +160,12 @@ fn fragment_specular_2_main( in : VertexOutput ) -> @location( 0 ) vec4f
     let dotNL = saturate( L.y );
     let dotNH = saturate( H.y );
 
-    //if( dotNL > 0.0 )
+    if( dotNL > 0.0 )
     {
-      let G_VIS = V_GGX_SmithCorrelated( alpha, dotNL, dotNV );
-      //let G = GeometrySmith( dotNV, dotNL, alpha );
-      let BRDF = 4.0 * G_VIS * dotVH / dotNH;
+      // let G_VIS = V_GGX_SmithCorrelated( alpha, dotNL, dotNV );
+      // let BRDF = 4.0 * G_VIS * dotVH / dotNH;
+      let G = GeometrySmith( dotNV, dotNL, alpha );
+      let BRDF = G * dotVH / ( dotNH * dotNV );
 
       let Fp5 = pow( 1.0 - dotVH, 5.0 );
       result.x += BRDF * ( 1.0 - Fp5 );

@@ -81,8 +81,12 @@ impl State {
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/autumn_field_puresky_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/passendorf_snow_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/metro_noord_4k.hdr" ).unwrap().decode().unwrap();
-    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/kloppenheim_06_puresky_4k.hdr" ).unwrap().decode().unwrap();
     //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/the_sky_is_on_fire_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/pink_sunrise_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/studio_small_09_4k.hdr" ).unwrap().decode().unwrap();
+    //let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/gem-4.hdr" ).unwrap().decode().unwrap();
+    let image = ImageReader::open( "D:/VS_projects/Rust/IBLConverter/assets/lightmap-r-2.hdr" ).unwrap().decode().unwrap();
     let image = image.to_rgba32f();
     let ( img_width, img_height ) = image.dimensions();
     let pixels = image.into_vec();
